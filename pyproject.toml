@@ -7,6 +7,6 @@ requires-python = ">=3.14.3"
 dependencies = [
     "polars>=1.39.0",
     "prefect-gcp[cloud-storage]>=0.6.17",
+    "pyarrow>=23.0.1",
     "requests>=2.32.5",
-    "tqdm>=4.67.3",
 ]

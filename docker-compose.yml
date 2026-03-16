@@ -1,0 +1,62 @@
+services:
+  database:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=prefect
+      - POSTGRES_PASSWORD=prefect
+      - POSTGRES_DB=prefect
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U prefect"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  server:
+    image: prefecthq/prefect:3-python3.12
+    depends_on:
+      database:
+        condition: service_healthy
+    ports:
+      - "4200:4200"
+    environment:
+      - PREFECT_API_DATABASE_CONNECTION_URL=postgresql+asyncpg://prefect:prefect@database:5432/prefect
+      - PREFECT_SERVER_API_HOST=0.0.0.0
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:4200/api/health').getcode()"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    command: ["prefect", "server", "start"]
+
+  deployer:
+    build: .
+    depends_on:
+      server:
+        condition: service_healthy
+    environment:
+      - PREFECT_API_URL=http://server:4200/api
+    volumes:
+      - .:/app
+      - /app/.venv
+    command: >
+      sh -c "until python3 -c 'import urllib.request; urllib.request.urlopen(\"http://server:4200/api/health\")'; do 
+               echo 'Waiting for Prefect API...'; 
+               sleep 2; 
+             done; 
+             prefect work-pool create 'zoomcamp-pool' --type process --overwrite;
+             prefect deploy --all"
+
+  worker:
+    build: .
+    depends_on:
+      server:
+        condition: service_healthy
+      deployer:
+        condition: service_completed_successfully
+    environment:
+      - PREFECT_API_URL=http://server:4200/api
+    volumes:
+      - .:/app
+      - /app/.venv
+      - ./data:/app/data
+    command: ["prefect", "worker", "start", "--pool", "zoomcamp-pool"]

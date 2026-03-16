@@ -1,0 +1,19 @@
+# prefect.yaml
+name: 311-ny-service-requests
+prefect-version: 3.0.0
+
+pull:
+
+deployments:
+  - name: nyc-311-deployment
+    entrypoint: extract/web_to_gcs.py:etl_parent_flow
+    work_pool:
+      name: zoomcamp-pool
+    parameters:
+      year: 2024
+      month: 1
+
+  - name: annual-backfill-deployment
+    entrypoint: extract/web_to_gcs.py:backfill_year_flow
+    work_pool:
+      name: zoomcamp-pool
