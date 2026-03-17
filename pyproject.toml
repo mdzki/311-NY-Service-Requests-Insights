@@ -1,9 +1,9 @@
 [project]
 name = "311-ny-service-requests-insights"
 version = "0.1.0"
-description = "Add your description here"
+description = "Data pipeline for NYC 311 service requests"
 readme = "README.md"
-requires-python = ">=3.14.3"
+requires-python = ">=3.12"
 dependencies = [
     "polars>=1.39.0",
     "prefect-gcp[cloud-storage]>=0.6.17",

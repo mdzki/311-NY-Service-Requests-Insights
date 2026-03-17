@@ -43,7 +43,7 @@ services:
                echo 'Waiting for Prefect API...'; 
                sleep 2; 
              done; 
-             prefect work-pool create 'zoomcamp-pool' --type process --overwrite;
+             prefect work-pool create 'docker-gcp-pool' --type process --overwrite;
              prefect deploy --all"
 
   worker:
@@ -59,4 +59,4 @@ services:
       - .:/app
       - /app/.venv
       - ./data:/app/data
-    command: ["prefect", "worker", "start", "--pool", "zoomcamp-pool"]
+    command: ["prefect", "worker", "start", "--pool", "docker-gcp-pool"]

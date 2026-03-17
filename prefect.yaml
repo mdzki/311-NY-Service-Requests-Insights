@@ -5,15 +5,17 @@ prefect-version: 3.0.0
 pull:
 
 deployments:
-  - name: nyc-311-deployment
-    entrypoint: extract/web_to_gcs.py:etl_parent_flow
+  - name: extract-load-deployment
+    entrypoint: main.py:extract_load_flow
     work_pool:
-      name: zoomcamp-pool
+      name: docker-gcp-pool
     parameters:
       year: 2024
       month: 1
 
   - name: annual-backfill-deployment
-    entrypoint: extract/web_to_gcs.py:backfill_year_flow
+    entrypoint: main.py:backfill_year_flow
     work_pool:
-      name: zoomcamp-pool
+      name: docker-gcp-pool
+    parameters:
+      year: 2024
