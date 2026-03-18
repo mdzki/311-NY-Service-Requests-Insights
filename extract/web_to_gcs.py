@@ -3,7 +3,7 @@
 import polars as pl
 from pathlib import Path
 import requests
-from prefect import task
+from prefect import task, get_run_logger
 from prefect.variables import Variable
 from prefect_gcp.cloud_storage import GcsBucket
 
@@ -11,6 +11,7 @@ from prefect_gcp.cloud_storage import GcsBucket
 @task(retries=3, log_prints=True)
 def download_data(year: int, month: int) -> Path:
     """Download NYC 311 data from API for a specific month."""
+    logger = get_run_logger()
     base_url = Variable.get(
         "nyc_311_url",
         default="https://data.cityofnewyork.us/resource/erm2-nwe9.csv"
@@ -19,7 +20,16 @@ def download_data(year: int, month: int) -> Path:
 
     file_name = f"nyc_311_{year}_{month:02d}.csv"
     path = Path(f"data/{file_name}")
+    file_name_parquet = f"nyc_311_{year}_{month:02d}.parquet"
+    path_parquet = Path(f"data/{file_name_parquet}")
+
     path.parent.mkdir(parents=True, exist_ok=True)
+
+    if path.exists():
+        logger.info(f"File {file_name} already exists, skipping download.")
+    elif path_parquet.exists():
+        logger.info(f"Parquet file {file_name_parquet} already exists, skipping download.")
+        return path
 
     next_month = month + 1 if month < 12 else 1
     next_year = year if month < 12 else year + 1
@@ -31,22 +41,41 @@ def download_data(year: int, month: int) -> Path:
         "$limit": limit
     }
 
-    print(f"Downloading {file_name}...")
-    with requests.get(base_url, params=params, stream=True) as r:
-        r.raise_for_status()
-        with open(path, 'wb') as f:
-            for chunk in r.iter_content(chunk_size=8192):
-                f.write(chunk)
+    logger.info(f"Downloading {file_name}...")
+    try:
+        with requests.get(base_url, params=params, stream=True, timeout=300) as r:
+            r.raise_for_status()
+            with open(path, 'wb') as f:
+                for chunk in r.iter_content(chunk_size=8192):
+                    f.write(chunk)
+    except requests.RequestException as e:
+        logger.error(f"Download failed: {e}")
+        raise
     return path
 
 
 @task(log_prints=True)
 def format_to_parquet(csv_path: Path) -> Path:
     """Convert CSV to Parquet format."""
+    logger = get_run_logger()
     parquet_path = csv_path.with_suffix(".parquet")
+    if parquet_path.exists():
+        logger.info(f"Parquet file {parquet_path.name} already exists, skipping conversion.")
+        return parquet_path
+    
+    logger.info(f"Converting {csv_path.name} to Parquet...")
     df = pl.read_csv(csv_path, infer_schema_length=50000, ignore_errors=True)
     df.write_parquet(parquet_path)
     return parquet_path
+
+
+@task(log_prints=True)
+def upload_to_gcs(path: Path) -> None:
+    """Upload file to GCS bucket."""
+    logger = get_run_logger()
+    gcs_block = GcsBucket.load("nyc-311-bucket")
+    logger.info(f"Uploading {path.name} to GCS...")
+    gcs_block.upload_from_path(from_path=path, to_path=f"311/{path.name}")
 
 
 @task(log_prints=True)
