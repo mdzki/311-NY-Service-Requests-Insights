@@ -20,13 +20,6 @@ Copy the example environment file and update with your values:
 cp .env.example .env
 ```
 
-Set environment variables:
-```bash
-export GCP_PROJECT_ID="your-project"
-export GCP_BUCKET="your-bucket"
-export PREFECT_API_URL="http://localhost:4200"
-```
-
 ## Running
 
 ```bash
@@ -54,4 +47,14 @@ pyproject.toml
 - **Prefect**: Workflow orchestration
 - **Polars**: Data processing
 - **GCP**: Cloud storage
+- **Terraform**: Infrastructure as code (GCP resources)
 - **dbt**: Transformations
+
+
+## Terraform Setup
+
+1. edit /terraform/terraform.tfvars (from /terraform/terraform.tfvars.example)
+2. `cd terraform`
+3. `terraform init`
+4. `terraform plan`
+5. `terraform apply`

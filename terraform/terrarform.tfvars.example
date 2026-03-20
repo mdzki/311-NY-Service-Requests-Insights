@@ -1,0 +1,7 @@
+credentials       = "./creds_json/gcp_key.json"
+project_name      = "project-name"
+location          = "EU"
+region            = "europe-central2"
+bq_dataset_name   = "NYC_311_SERVICE_REQUESTS_DATASET"
+gcs_bucket_name   = "nyc-311-service-requests-bucket-some-suffix"
+gcs_storage_class = "STANDARD"
