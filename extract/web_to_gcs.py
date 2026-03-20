@@ -27,6 +27,7 @@ def download_data(year: int, month: int) -> Path:
 
     if path.exists():
         logger.info(f"File {file_name} already exists, skipping download.")
+        return path
     elif path_parquet.exists():
         logger.info(f"Parquet file {file_name_parquet} already exists, skipping download.")
         return path
@@ -76,6 +77,42 @@ def upload_to_gcs(path: Path) -> None:
     gcs_block = GcsBucket.load("nyc-311-bucket")
     logger.info(f"Uploading {path.name} to GCS...")
     gcs_block.upload_from_path(from_path=path, to_path=f"311/{path.name}")
+
+
+@task(log_prints=True)
+def validate_parquet_and_cleanup(parquet_path: Path) -> None:
+    """Validate row count between Parquet and corresponding CSV, and delete CSV if they match."""
+    logger = get_run_logger()
+    csv_path = parquet_path.with_suffix(".csv")
+
+    if not parquet_path.exists():
+        logger.warning(f"Parquet not found: {parquet_path}")
+        return
+
+    if not csv_path.exists():
+        logger.warning(f"CSV not found: {csv_path}")
+        return
+
+    try:
+        parquet_count = pl.scan_parquet(parquet_path).select(pl.count()).collect().item()
+        csv_count = pl.scan_csv(csv_path, ignore_errors=True).select(pl.count()).collect().item()
+    except Exception as exc:
+        logger.error(f"Failed to count rows: {exc}")
+        raise
+
+    if csv_count == parquet_count:
+        logger.info(
+            f"Row counts match (csv={csv_count}, parquet={parquet_count}); deleting {csv_path.name}."
+        )
+        try:
+            csv_path.unlink()
+        except Exception as exc:
+            logger.error(f"Failed to delete CSV {csv_path}: {exc}")
+            raise
+    else:
+        logger.warning(
+            f"Row count mismatch: csv={csv_count}, parquet={parquet_count}; keeping CSV for inspection."
+        )
 
 
 @task(log_prints=True)

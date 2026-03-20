@@ -4,7 +4,7 @@ import datetime
 from pydantic import BaseModel, Field, model_validator
 from typing import Optional
 from prefect import flow, get_run_logger
-from extract.web_to_gcs import download_data, format_to_parquet, upload_to_gcs
+from extract.web_to_gcs import download_data, format_to_parquet, validate_parquet_and_cleanup, upload_to_gcs
 
 # Validation models for flow parameters
 class YearParams(BaseModel):
@@ -31,7 +31,7 @@ def extract_load_flow(year: int, month: int) -> Optional[str]:
 
     csv_path = download_data(year, month)
     parquet_path = format_to_parquet(csv_path)
-
+    validate_parquet_and_cleanup(parquet_path)
     # upload_to_gcs(parquet_path)
 
     logger.info(f"ETL completed for {year}-{month:02d}")
