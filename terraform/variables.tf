@@ -1,5 +1,5 @@
 variable "credentials" { description = "Path to GCP key" }
-variable "project_name" { description = "GCP Project ID" }
+variable "project_id" { description = "GCP Project ID" }
 variable "location" { description = "Dataset location" }
 variable "region" { description = "Provider region" }
 variable "bq_dataset_name" { description = "BigQuery Dataset Name" }

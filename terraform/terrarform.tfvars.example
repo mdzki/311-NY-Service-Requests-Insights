@@ -1,5 +1,5 @@
 credentials       = "./creds_json/gcp_key.json"
-project_name      = "project-name"
+project_id        = "project-id"
 location          = "EU"
 region            = "europe-central2"
 bq_dataset_name   = "NY_311_SERVICE_REQUESTS_DATASET"
