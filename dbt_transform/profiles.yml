@@ -4,25 +4,11 @@ dbt_transform:
       dataset: NY_311_SERVICE_REQUESTS_DATASET
       job_execution_timeout_seconds: 300
       job_retries: 1
-      keyfile: /creds_json/gcp_key.json
+      keyfile: "{{ env_var('GOOGLE_APPLICATION_CREDENTIALS') }}"      
       location: EU
       method: service-account
       priority: interactive
-      project: ny-service-requests
-      threads: 1
-      type: bigquery
-  target: dev
-ny_311_transform:
-  outputs:
-    dev:
-      dataset: NY_311_SERVICE_REQUESTS_DATASET
-      job_execution_timeout_seconds: 300
-      job_retries: 1
-      keyfile: /creds_json/gcp_key.json
-      location: EU
-      method: service-account
-      priority: interactive
-      project: ny-service-requests
+      project: "{{ env_var('GCP_PROJECT_ID') }}"
       threads: 1
       type: bigquery
   target: dev

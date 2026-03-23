@@ -34,3 +34,12 @@ models:
     # Config indicated by + and applies to all files under models/example/
     example:
       +materialized: view
+
+
+vars:
+  # required by dbt_external_tables for BigQuery
+  external_tables_batch_size: 10
+
+packages:
+  - package: dbt-labs/dbt_external_tables
+    version: 0.12.2

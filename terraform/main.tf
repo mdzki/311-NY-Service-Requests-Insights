@@ -14,7 +14,7 @@ provider "google" {
   region      = var.region
 }
 
-resource "google_storage_bucket" "demo-bucket" {
+resource "google_storage_bucket" "ny_requests_bucket" {
   name          = var.gcs_bucket_name
   location      = var.location
   storage_class = var.gcs_storage_class
