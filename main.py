@@ -37,7 +37,7 @@ def extract_load_flow(year: int, month: int, overwrite: bool = False) -> None:
     logger = get_run_logger()
     logger.info(f"Starting ETL for {year}-{month:02d}")
 
-    if not overwrite and check_if_exists_in_gcs(year, month):
+    if not overwrite and check_if_exists_in_gcs(year, month) and not year == datetime.datetime.now().year and month == datetime.datetime.now().month:
         logger.info(f"File for {year}-{month:02d} already exists in GCS. Skipping.")
     else:
         logger.info(f"Overwriting existing file for {year}-{month:02d} in GCS.")
@@ -58,6 +58,16 @@ def backfill_year_flow(year: int, overwrite: bool = False) -> None:
 
     for month in range(1, max_month + 1):
         extract_load_flow(year=year_params.year, month=month, overwrite=overwrite)
+
+
+@flow(name="NYC 311 Total Backfill 2020-2026")
+def backfill_full_dataset(overwrite: bool = False) -> None:
+    """Backfill data for an entire dataset."""
+
+    now = datetime.datetime.now()
+    
+    for year in range(2020, now.year + 1):
+        backfill_year_flow(year=year, overwrite=overwrite)
 
 
 if __name__ == "__main__":

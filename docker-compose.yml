@@ -12,7 +12,7 @@ services:
       retries: 5
 
   server:
-    image: prefecthq/prefect:3-python3.12
+    image: prefecthq/prefect:3-python3.13
     depends_on:
       database:
         condition: service_healthy
@@ -22,7 +22,13 @@ services:
       - PREFECT_API_DATABASE_CONNECTION_URL=postgresql+asyncpg://prefect:prefect@database:5432/prefect
       - PREFECT_SERVER_API_HOST=0.0.0.0
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:4200/api/health').getcode()"]
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:4200/api/health').getcode()",
+        ]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -30,24 +36,23 @@ services:
 
   deployer:
     build: .
+    env_file: .env
     depends_on:
       server:
         condition: service_healthy
     environment:
       - PREFECT_API_URL=http://server:4200/api
-    volumes:
-      - .:/app
-      - /app/.venv
     command: >
       sh -c "until python3 -c 'import urllib.request; urllib.request.urlopen(\"http://server:4200/api/health\")'; do 
                echo 'Waiting for Prefect API...'; 
                sleep 2; 
              done; 
-             prefect work-pool create 'docker-gcp-pool' --type process --overwrite;
+             prefect work-pool create 'docker-gcp-pool' --type process --overwrite &&
              prefect deploy --all"
 
   worker:
     build: .
+    env_file: .env
     depends_on:
       server:
         condition: service_healthy
@@ -58,5 +63,6 @@ services:
     volumes:
       - .:/app
       - /app/.venv
+      - ./creds_json:/app/creds.json:ro
       - ./data:/app/data
     command: ["prefect", "worker", "start", "--pool", "docker-gcp-pool"]

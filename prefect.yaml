@@ -10,7 +10,7 @@ deployments:
     work_pool:
       name: docker-gcp-pool
     parameters:
-      year: 2024
+      year: 2026
       month: 1
     run_name: "NYC 311 ETL {year}-{month:02d}"
 
@@ -21,3 +21,10 @@ deployments:
     parameters:
       year: 2024
     run_name: "NYC 311 Backfill {year}"
+
+  - name: full-backfill-deployment
+    entrypoint: main.py:backfill_full_dataset
+    work_pool:
+      name: docker-gcp-pool
+    parameters: {}
+    run_name: "NYC 311 Full Backfill 2020-{{now.year}}"
