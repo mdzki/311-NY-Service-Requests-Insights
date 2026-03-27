@@ -1,0 +1,14 @@
+version: 2
+
+sources:
+  - name: external_source
+    database: "{{ env_var('GCP_PROJECT_ID') }}"
+    schema: NY_311_SERVICE_REQUESTS_DATASET
+    loader: gcs
+
+    tables:
+      - name: ny_311_external
+        description: "External table pointing to GCS parquet files"
+        external:
+          location: "gs://"{{ env_var('GCP_GCS_BUCKET') }}"/ny_service_requests/*.parquet"
+          format: parquet

@@ -42,11 +42,15 @@ services:
         condition: service_healthy
     environment:
       - PREFECT_API_URL=http://server:4200/api
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/creds_json/gcp_key.json
+    volumes:
+      - ./creds_json/gcp_key.json:/app/creds_json/gcp_key.json:ro
     command: >
       sh -c "until python3 -c 'import urllib.request; urllib.request.urlopen(\"http://server:4200/api/health\")'; do 
                echo 'Waiting for Prefect API...'; 
                sleep 2; 
              done; 
+             dbt deps --project-dir dbt_transform --profiles-dir dbt_transform && 
              prefect work-pool create 'docker-gcp-pool' --type process --overwrite &&
              prefect deploy --all"
 
@@ -60,9 +64,10 @@ services:
         condition: service_completed_successfully
     environment:
       - PREFECT_API_URL=http://server:4200/api
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/creds_json/gcp_key.json
     volumes:
       - .:/app
       - /app/.venv
-      - ./creds_json:/app/creds.json:ro
+      - ./creds_json/gcp_key.json:/app/creds_json/gcp_key.json:ro
       - ./data:/app/data
     command: ["prefect", "worker", "start", "--pool", "docker-gcp-pool"]

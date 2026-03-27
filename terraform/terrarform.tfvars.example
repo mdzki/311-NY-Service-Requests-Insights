@@ -1,4 +1,4 @@
-credentials       = "./creds_json/gcp_key.json"
+credentials       = "../creds_json/gcp_key.json"
 project_id        = "project-id"
 location          = "EU"
 region            = "europe-central2"

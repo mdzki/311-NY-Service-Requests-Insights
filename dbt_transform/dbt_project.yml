@@ -1,11 +1,7 @@
 
-# Name your project! Project names should contain only lowercase characters
-# and underscores. A good package name should reflect your organization's
-# name or the intended use of these models
-name: 'dbt_transform'
+name: 'ny_311_service_requests'
 version: '1.0.0'
 
-# This setting configures which "profile" dbt uses for this project.
 profile: 'dbt_transform'
 
 # These configurations specify where dbt should look for different types of files.
@@ -39,7 +35,13 @@ models:
 vars:
   # required by dbt_external_tables for BigQuery
   external_tables_batch_size: 10
+  external_tables:
+    render_using_jinja: true
 
 packages:
   - package: dbt-labs/dbt_external_tables
     version: 0.12.2
+
+dispatch:
+  - macro_namespace: dbt_external_tables
+    search_order: ['dbt_external_tables', 'dbt']
