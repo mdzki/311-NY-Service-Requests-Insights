@@ -38,9 +38,7 @@ vars:
   external_tables:
     render_using_jinja: true
 
-packages:
-  - package: dbt-labs/dbt_external_tables
-    version: 0.12.2
+
 
 dispatch:
   - macro_namespace: dbt_external_tables

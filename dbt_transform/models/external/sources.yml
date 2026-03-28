@@ -10,5 +10,51 @@ sources:
       - name: ny_311_external
         description: "External table pointing to GCS parquet files"
         external:
-          location: "gs://"{{ env_var('GCP_GCS_BUCKET') }}"/ny_service_requests/*.parquet"
-          format: parquet
+          location: "gs://{{ env_var('GCP_GCS_BUCKET') }}/ny_service_requests/*.parquet"
+          options:
+            format: parquet
+        columns:
+          - {name: unique_key, data_type: string}
+          - {name: created_date, data_type: string}
+          - {name: closed_date, data_type: string}
+          - {name: agency, data_type: string}
+          - {name: agency_name, data_type: string}
+          - {name: complaint_type, data_type: string}
+          - {name: descriptor, data_type: string}
+          - {name: descriptor_2, data_type: string}
+          - {name: location_type, data_type: string}
+          - {name: incident_zip, data_type: int64}
+          - {name: incident_address, data_type: string}
+          - {name: street_name, data_type: string}
+          - {name: cross_street_1, data_type: string}
+          - {name: cross_street_2, data_type: string}
+          - {name: intersection_street_1, data_type: string}
+          - {name: intersection_street_2, data_type: string}
+          - {name: address_type, data_type: string}
+          - {name: city, data_type: string}
+          - {name: landmark, data_type: string}
+          - {name: facility_type, data_type: string}
+          - {name: status, data_type: string}
+          - {name: due_date, data_type: string}
+          - {name: resolution_description, data_type: string}
+          - {name: resolution_action_updated_date, data_type: string}
+          - {name: community_board, data_type: string}
+          - {name: council_district, data_type: int64}
+          - {name: police_precinct, data_type: string}
+          - {name: bbl, data_type: int64}
+          - {name: borough, data_type: string}
+          - {name: x_coordinate_state_plane, data_type: int64}
+          - {name: y_coordinate_state_plane, data_type: int64}
+          - {name: open_data_channel_type, data_type: string}
+          - {name: park_facility_name, data_type: string}
+          - {name: park_borough, data_type: string}
+          - {name: vehicle_type, data_type: string}
+          - {name: taxi_company_borough, data_type: string}
+          - {name: taxi_pick_up_location, data_type: string}
+          - {name: bridge_highway_name, data_type: string}
+          - {name: bridge_highway_direction, data_type: string}
+          - {name: road_ramp, data_type: string}
+          - {name: bridge_highway_segment, data_type: string}
+          - {name: latitude, data_type: float64}
+          - {name: longitude, data_type: float64}
+          - {name: location, data_type: string}

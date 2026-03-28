@@ -19,9 +19,11 @@ bucket_name = os.getenv("GCP_GCS_BUCKET")
 @task(retries=3, log_prints=True)
 def check_if_exists_in_gcs(year: int, month: int) -> bool:
     """Check if the final parquet file already exists in GCS."""
+    logger = get_run_logger()
     client = storage.Client(project=project_id)
     bucket = client.bucket(bucket_name)
     blob_name = f"ny_service_requests/nyc_311_{year}_{month:02d}.parquet"
+    logger.info(f"Checking if '{blob_name}' exists in GCS bucket {bucket_name}...")
     return bucket.blob(blob_name).exists()
 
 
@@ -41,14 +43,6 @@ def download_data(year: int, month: int) -> Path:
 
     path.parent.mkdir(parents=True, exist_ok=True)
 
-    if path.exists():
-        logger.info(f"File {file_name} already exists, skipping download.")
-        return path
-    elif path_parquet.exists():
-        logger.info(
-            f"Parquet file {file_name_parquet} already exists, skipping download."
-        )
-        return path
 
     next_month = month + 1 if month < 12 else 1
     next_year = year if month < 12 else year + 1
@@ -84,9 +78,82 @@ def format_to_parquet(csv_path: Path) -> Path:
         )
         return parquet_path
 
-    logger.info(f"Converting {csv_path.name} to Parquet...")
-    df = pl.read_csv(csv_path, infer_schema_length=50000, ignore_errors=True)
-    df.write_parquet(parquet_path)
+    logger.info(f"Converting {csv_path.name} to Parquet with enforced schema...")
+
+    schema_definition = {
+        "unique_key": pl.Utf8,
+        "created_date": pl.Utf8,
+        "closed_date": pl.Utf8,
+        "agency": pl.Utf8,
+        "agency_name": pl.Utf8,
+        "complaint_type": pl.Utf8,
+        "descriptor": pl.Utf8,
+        "descriptor_2": pl.Utf8,
+        "location_type": pl.Utf8,
+        "incident_zip": pl.Utf8,
+        "incident_address": pl.Utf8,
+        "street_name": pl.Utf8,
+        "cross_street_1": pl.Utf8,
+        "cross_street_2": pl.Utf8,
+        "intersection_street_1": pl.Utf8,
+        "intersection_street_2": pl.Utf8,
+        "address_type": pl.Utf8,
+        "city": pl.Utf8,
+        "landmark": pl.Utf8,
+        "facility_type": pl.Utf8,
+        "status": pl.Utf8,
+        "due_date": pl.Utf8,
+        "resolution_description": pl.Utf8,
+        "resolution_action_updated_date": pl.Utf8,
+        "community_board": pl.Utf8,
+        "council_district": pl.Int64,
+        "police_precinct": pl.Utf8,
+        "bbl": pl.Utf8,
+        "borough": pl.Utf8,
+        "x_coordinate_state_plane": pl.Int64,
+        "y_coordinate_state_plane": pl.Int64,
+        "open_data_channel_type": pl.Utf8,
+        "park_facility_name": pl.Utf8,
+        "park_borough": pl.Utf8,
+        "vehicle_type": pl.Utf8,
+        "taxi_company_borough": pl.Utf8,
+        "taxi_pick_up_location": pl.Utf8,
+        "bridge_highway_name": pl.Utf8,
+        "bridge_highway_direction": pl.Utf8,
+        "road_ramp": pl.Utf8,
+        "bridge_highway_segment": pl.Utf8,
+        "latitude": pl.Float64,
+        "longitude": pl.Float64,
+        "location": pl.Utf8,
+    }
+
+    date_columns = [
+        "created_date",
+        "closed_date",
+        "due_date",
+        "resolution_action_updated_date",
+    ]
+
+    try:
+        df = pl.read_csv(
+            csv_path,
+            dtypes=schema_definition,
+            ignore_errors=True,
+            null_values=["NA", "N/A", ""],
+        )
+
+        for col in date_columns:
+            if col in df.columns:
+                df = df.with_columns(
+                    pl.col(col).str.to_datetime("%Y-%m-%dT%H:%M:%S%.3f", strict=False)
+                )
+
+        df.write_parquet(parquet_path)
+        logger.info(f"Successfully created {parquet_path.name}")
+    except Exception as e:
+        logger.error(f"Failed to convert {csv_path.name}: {e}")
+        raise
+
     return parquet_path
 
 

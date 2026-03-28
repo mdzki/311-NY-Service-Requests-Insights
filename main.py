@@ -37,7 +37,10 @@ def extract_load_flow(year: int, month: int, overwrite: bool = False) -> None:
     logger = get_run_logger()
     logger.info(f"Starting ETL for {year}-{month:02d}")
 
-    if not overwrite and check_if_exists_in_gcs(year, month) and not year == datetime.datetime.now().year and month == datetime.datetime.now().month:
+    now = datetime.datetime.now()
+    is_current_month = (year == now.year and month == now.month)
+
+    if not overwrite and check_if_exists_in_gcs(year, month) and not is_current_month:
         logger.info(f"File for {year}-{month:02d} already exists in GCS. Skipping.")
     else:
         logger.info(f"Overwriting existing file for {year}-{month:02d} in GCS.")
