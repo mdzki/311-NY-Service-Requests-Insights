@@ -158,7 +158,7 @@ def format_to_parquet(csv_path: Path) -> Path:
 
 
 @task(log_prints=True)
-def validate_parquet_with_csv_and_cleanup(parquet_path: Path) -> Path:
+def validate_parquet_with_csv_and_cleanup(parquet_path: Path, erase_local_files: bool) -> Path:
     """Validate row count between Parquet and corresponding CSV, and delete CSV if they match."""
     logger = get_run_logger()
     csv_path = parquet_path.with_suffix(".csv")
@@ -178,7 +178,11 @@ def validate_parquet_with_csv_and_cleanup(parquet_path: Path) -> Path:
     except Exception as exc:
         logger.error(f"Failed to count rows: {exc}")
         raise
-
+    
+    if not erase_local_files:
+        logger.info("erase_local_files is False, skipping cleanup.")
+        return parquet_path
+    
     if csv_count == parquet_count:
         logger.info(f"Row counts match ({csv_count}); deleting {csv_path.name}.")
         try:

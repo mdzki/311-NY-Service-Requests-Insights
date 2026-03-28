@@ -30,7 +30,7 @@ class MonthParams(YearParams):
 
 
 @flow(name="NYC 311 Monthly Extract and Load")
-def extract_load_flow(year: int, month: int, overwrite: bool = False) -> None:
+def extract_load_flow(year: int, month: int, overwrite: bool = False, erase_local_files: bool = True) -> None:
     """
     Extract NYC 311 data, convert to Parquet, and load to GCS.
     """
@@ -46,13 +46,13 @@ def extract_load_flow(year: int, month: int, overwrite: bool = False) -> None:
         logger.info(f"Overwriting existing file for {year}-{month:02d} in GCS.")
         csv_path = download_data(year, month)
         parquet_path = format_to_parquet(csv_path)
-        validated_parquet_path = validate_parquet_with_csv_and_cleanup(parquet_path)
+        validated_parquet_path = validate_parquet_with_csv_and_cleanup(parquet_path, erase_local_files)
         upload_to_gcs(validated_parquet_path)
         logger.info(f"ETL completed for {year}-{month:02d}")
 
 
 @flow(name="NYC 311 Annual Backfill")
-def backfill_year_flow(year: int, overwrite: bool = False) -> None:
+def backfill_year_flow(year: int, overwrite: bool = False, erase_local_files: bool = True) -> None:
     """Backfill data for an entire year."""
 
     year_params = YearParams(year=year)
@@ -60,18 +60,18 @@ def backfill_year_flow(year: int, overwrite: bool = False) -> None:
     max_month = now.month if year_params.year == now.year else 12
 
     for month in range(1, max_month + 1):
-        extract_load_flow(year=year_params.year, month=month, overwrite=overwrite)
+        extract_load_flow(year=year_params.year, month=month, overwrite=overwrite, erase_local_files=erase_local_files)
 
 
 @flow(name="NYC 311 Total Backfill 2020-2026")
-def backfill_full_dataset(overwrite: bool = False) -> None:
+def backfill_full_dataset(overwrite: bool = False, erase_local_files: bool = True) -> None:
     """Backfill data for an entire dataset."""
 
     now = datetime.datetime.now()
     
     for year in range(2020, now.year + 1):
-        backfill_year_flow(year=year, overwrite=overwrite)
+        backfill_year_flow(year=year, overwrite=overwrite, erase_local_files=erase_local_files)
 
 
 if __name__ == "__main__":
-    backfill_year_flow(year=2024, overwrite=False)
+    backfill_year_flow(year=2024, overwrite=False, erase_local_files=True)
