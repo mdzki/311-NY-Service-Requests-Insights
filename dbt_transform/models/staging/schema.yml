@@ -1,0 +1,142 @@
+version: 2
+
+models:
+  - name: stg_ny_311
+    description: "Staging model for NYC 311 Service Requests. Data is partitioned by created_date and clustered by problem and borough."
+    columns:
+      - name: ticket_id
+        description: "Unique identifier of a Service Request (SR) in the open data set."
+        tests:
+          - unique
+          - not_null
+
+      - name: created_date
+        description: "Date SR was created."
+        tests:
+          - not_null
+
+      - name: closed_date
+        description: "Date SR was closed by responding agency."
+
+      - name: due_date
+        description: "Date when responding agency is expected to update the SR."
+
+      - name: resolution_action_updated_date
+        description: "Date when responding agency last updated the SR."
+
+      - name: agency
+        description: "Acronym of responding City Government Agency."
+
+      - name: agency_name
+        description: "Full name of responding City Government Agency."
+
+      - name: problem
+        description: "The identifier of which the SR is associated (e.g. 'Illegal Parking')."
+
+      - name: problem_detail
+        description: "Further details associated to the problem."
+
+      - name: additional_details
+        description: "Additional descriptor for specific complaint categories."
+
+      - name: location_type
+        description: "Describes the type of location used in the address information."
+
+      - name: incident_zip
+        description: "Incident location zip code."
+
+      - name: incident_address
+        description: "House number of incident location."
+
+      - name: street_name
+        description: "Street name of incident location."
+
+      - name: cross_street_1
+        description: "First cross street for the incident location."
+
+      - name: cross_street_2
+        description: "Second cross street for the incident location."
+
+      - name: intersection_street_1
+        description: "First intersecting street based on address information."
+
+      - name: intersection_street_2
+        description: "Second intersecting street based on address information."
+
+      - name: address_type
+        description: "Type of incident location information (Address, Intersection, Blockface, etc.)."
+
+      - name: city
+        description: "City of the incident location."
+
+      - name: landmark
+        description: "If the incident location is identified as a Landmark."
+
+      - name: facility_type
+        description: "Type of facility where the incident occurred."
+
+      - name: status
+        description: "Status of SR (Open, Closed, Pending, etc.)."
+
+      - name: resolution_description
+        description: "Explanation of the resolution provided by the responding agency."
+
+      - name: community_board
+        description: "Community Board of the incident location."
+
+      - name: council_district
+        description: "City Council District of the incident location."
+
+      - name: police_precinct
+        description: "Police Precinct of the incident location."
+
+      - name: bbl
+        description: "Borough, Block and Lot (BBL) identifies real estate for tax purposes."
+
+      - name: borough
+        description: "Borough of the incident location."
+
+      - name: x_coordinate_state_plane
+        description: "Geo-spatial X coordinate of the incident location (State Plane)."
+
+      - name: y_coordinate_state_plane
+        description: "Geo-spatial Y coordinate of the incident location (State Plane)."
+
+      - name: latitude
+        description: "Geo-spatial Latitude of the incident location."
+
+      - name: longitude
+        description: "Geo-spatial Longitude of the incident location."
+
+      - name: location
+        description: "Combined Latitude and Longitude for mapping."
+
+      - name: open_data_channel_type
+        description: "Indicates how the SR was submitted (Phone, Online, App, etc.)."
+
+      - name: park_facility_name
+        description: "If the incident location is a Park, the name of the Park."
+
+      - name: park_borough
+        description: "The borough of the park facility."
+
+      - name: vehicle_type
+        description: "Type of vehicle associated with the SR (if applicable)."
+
+      - name: taxi_company_borough
+        description: "Borough of the taxi company (if applicable)."
+
+      - name: taxi_pick_up_location
+        description: "Pick up location for taxi related SRs."
+
+      - name: bridge_highway_name
+        description: "Name of the bridge or highway associated with the incident."
+
+      - name: bridge_highway_direction
+        description: "Direction of travel on the bridge or highway."
+
+      - name: road_ramp
+        description: "Indicates if the incident occurred on a Road or a Ramp."
+
+      - name: bridge_highway_segment
+        description: "The specific segment of the bridge or highway."

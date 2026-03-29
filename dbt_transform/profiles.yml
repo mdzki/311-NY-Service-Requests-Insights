@@ -6,7 +6,7 @@ dbt_transform:
       job_retries: 1
       keyfile: "{{ env_var('GOOGLE_APPLICATION_CREDENTIALS') }}"      
       location: EU
-      method: service-account
+      method: oauth
       priority: interactive
       project: "{{ env_var('GCP_PROJECT_ID') }}"
       threads: 1
