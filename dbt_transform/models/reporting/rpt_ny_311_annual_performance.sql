@@ -1,9 +1,3 @@
-{{
-    config(
-        materialized='view'
-    )
-}}
-
 with enriched as (
     select * from {{ ref('int_ny_311') }}
 ),

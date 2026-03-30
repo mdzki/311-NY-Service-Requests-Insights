@@ -43,16 +43,19 @@ services:
     environment:
       - PREFECT_API_URL=http://server:4200/api
       - GOOGLE_APPLICATION_CREDENTIALS=/app/creds_json/gcp_key.json
+      - UV_LINK_MODE=copy
     volumes:
+      - .:/app
+      - /app/.venv
       - ./creds_json/gcp_key.json:/app/creds_json/gcp_key.json:ro
     command: >
-      sh -c "until python3 -c 'import urllib.request; urllib.request.urlopen(\"http://server:4200/api/health\")'; do 
+      sh -c "until uv run python -c 'import urllib.request; urllib.request.urlopen(\"http://server:4200/api/health\")'; do 
                echo 'Waiting for Prefect API...'; 
                sleep 2; 
              done; 
-             dbt deps --project-dir dbt_transform --profiles-dir dbt_transform && 
-             prefect work-pool create 'docker-gcp-pool' --type process --overwrite &&
-             prefect deploy --all"
+             uv run dbt deps --project-dir dbt_transform --profiles-dir dbt_transform && 
+             uv run prefect work-pool create 'docker-gcp-pool' --type process --overwrite &&
+             uv run prefect deploy --all"
 
   worker:
     build: .
@@ -65,9 +68,27 @@ services:
     environment:
       - PREFECT_API_URL=http://server:4200/api
       - GOOGLE_APPLICATION_CREDENTIALS=/app/creds_json/gcp_key.json
+      - UV_LINK_MODE=copy
     volumes:
       - .:/app
       - /app/.venv
       - ./creds_json/gcp_key.json:/app/creds_json/gcp_key.json:ro
       - ./data:/app/data
-    command: ["prefect", "worker", "start", "--pool", "docker-gcp-pool"]
+    command: uv run prefect worker start --pool docker-gcp-pool
+
+  dashboard:
+    build: .
+    env_file: .env
+    depends_on:
+      worker:
+        condition: service_started
+    ports:
+      - "8501:8501"
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/creds_json/gcp_key.json
+      - UV_LINK_MODE=copy
+    volumes:
+      - .:/app
+      - /app/.venv
+      - ./creds_json/gcp_key.json:/app/creds_json/gcp_key.json:ro
+    command: uv run streamlit run dashboard/app.py --server.port 8501 --server.address 0.0.0.0
