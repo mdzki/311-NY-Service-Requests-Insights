@@ -23,6 +23,18 @@ models:
         data_type: timestamp
         granularity: day
       +cluster_by: ["problem", "borough"]
+    intermediate:
+      +materialized: table
+    reporting:
+      +materialized: table
+
+seeds:
+  ny_311_service_requests:
+    +quote_columns: false
+    ny_311_all_agencies_complaint_details:
+      +delimiter: "|"
+    ny_311_hpd_complaint_details:
+      +delimiter: "|"
 
 
 vars:
